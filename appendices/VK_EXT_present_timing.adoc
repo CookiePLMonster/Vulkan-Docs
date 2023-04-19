@@ -241,4 +241,6 @@ Split it out into its own extension and define the interaction here.
   * Revision 3, 2023-01-31 (Lionel Duc)
   ** Propose resolution to issue (9): let the application provide the queue size for the
      pending results.
-  ** Add explicit interaction with VK_KHR_present_wait.
+
+  * Revision 4, 2023-05-03 (Lionel Duc)
+  ** Change target and feedback times to be associated with a well-defined present stage.
