@@ -24,6 +24,9 @@ include::{generated}/meta/{refprefix}VK_EXT_present_timing.adoc[]
   - Niklas Smedberg, Unity Technologies
   - Tobias Hector, AMD
   - Lionel Duc, NVIDIA
+  - Lina Versace, Google
+  - Sebastian Wick, Red Hat
+  - Jakob Bornecrantz, Collabora
 
 === Description
 

@@ -8,13 +8,13 @@
 When the <<features-presentAtAbsoluteTime, pname:presentAtAbsoluteTime>> or
 <<features-presentAtRelativeTime, pname:presentAtRelativeTime>> feature is
 enabled, additional fields can: be specified that allow an application to
-specify the earliest time that an image should be displayed.
+specify the earliest time that an image should: be displayed.
 This allows an application to avoid stutter that is caused by an image being
 displayed earlier than planned.
-Such stuttering can occur with both fixed and variable-refresh-rate
+Such stuttering might occur with both fixed and variable-refresh-rate
 displays, because stuttering occurs when the geometry is not correctly
 positioned for when the image is displayed.
-An application can: instruct the presentation engine that an image should
+An application can: instruct the presentation engine that an image must:
 not be displayed earlier than a specified time by including the
 sname:VkPresentTimesInfoEXT structure in the pname:pNext chain of the
 sname:VkPresentInfoKHR structure.
@@ -63,10 +63,9 @@ the following present modes:
     be ename:VK_PRESENT_MODE_FIFO_KHR or
     ename:VK_PRESENT_MODE_FIFO_RELAXED_KHR.
   * For each member of sname:VkPresentInfoKHR::pname:pSwapchains, if the
-    associated sname:VkPresentTimeEXT is non-zero, the swapchain creation
-    flags must: include one of
-    ename:VK_SWAPCHAIN_CREATE_ABSOLUTE_TIME_BIT_EXT or
-    ename:VK_SWAPCHAIN_CREATE_RELATIVE_TIME_BIT_EXT.
+    associated sname:VkPresentTimeEXT is non-zero, the swapchain must: have
+    been created with a non-zero
+    sname:VkSwapchainPresentTimingCreateInfoEXT::pname:presentStageTarget
 ****
 
 include::{generated}/validity/structs/VkPresentTimesInfoEXT.adoc[]
@@ -84,16 +83,17 @@ include::{generated}/api/structs/VkPresentTimeEXT.adoc[]
     stage. A value of zero specifies that the presentation engine may:
     display the image at any time allowed by the current present mode.
   * pname:minPresentDuration, if non-zero, specifies the minimum duration in
-    nanoseconds the application wants the image to be displayed to the user.
-    A value of zero specifies that the presentation engine may: display the
-    image for any duration allowed by the current present mode.
+    nanoseconds before which the next image presentation request can: reach
+    the target present stage. A value of zero specifies that the
+    presentation engine may: display the image for any duration allowed by
+    the current present mode.
 
 The contents of the sname:VkPresentTimeEXT union is interpreted depending on
 the associated sname:VkPresentInfoKHR::pname:pSwapchains member creation
-flags. If ename:VK_SWAPCHAIN_CREATE_ABSOLUTE_TIME_BIT_EXT was used to create
-the pname:swapchain, pname:targetPresentTime is used. If
-ename:VK_SWAPCHAIN_CREATE_RELATIVE_TIME_BIT_EXT was used to create the
-pname:swapchain, pname:minPresentDuration is used.
+values. If
+sname:VkSwapchainPresentTimingCreateInfoEXT::pname:presentAtRelativeTime was
+ename:VK_FALSE when creating the pname:swapchain, pname:targetPresentTime is
+used. Otherwise, pname:minPresentDuration is used.
 
 pname:targetPresentTime is a time in nanoseconds, according to the
 time-domain being used. The presentation engine must: not complete the
