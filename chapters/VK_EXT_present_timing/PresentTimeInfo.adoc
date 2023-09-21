@@ -2,43 +2,35 @@
 //
 // SPDX-License-Identifier: CC-BY-4.0
 
-[open,refpage='VkPresentTimesInfoEXT',desc='The earliest time each image should be presented',type='structs']
+[open,refpage='VkPresentTimingsInfoEXT',desc='Array of VkPresentTimingInfoEXT to chain with VkPresentInfoKHR',type='structs']
 --
 
 When the <<features-presentAtAbsoluteTime, pname:presentAtAbsoluteTime>> or
 <<features-presentAtRelativeTime, pname:presentAtRelativeTime>> feature is
-enabled, additional fields can: be specified that allow an application to
-specify the earliest time that an image should: be displayed.
-This allows an application to avoid stutter that is caused by an image being
-displayed earlier than planned.
-Such stuttering might occur with both fixed and variable-refresh-rate
-displays, because stuttering occurs when the geometry is not correctly
-positioned for when the image is displayed.
-An application can: instruct the presentation engine that an image must:
-not be displayed earlier than a specified time by including the
-sname:VkPresentTimesInfoEXT structure in the pname:pNext chain of the
-sname:VkPresentInfoKHR structure.
+enabled, an application can: instruct the presentation engine that an image
+must: not be displayed earlier than a specified time, or for a minimum
+duration, by including the sname:VkPresentTimingsInfoEXT structure in the
+pname:pNext chain of the slink:VkPresentInfoKHR structure.
 
-The sname:VkPresentTimesInfoEXT structure is defined as:
+The sname:VkPresentTimingsInfoEXT structure is defined as:
 
-include::{generated}/api/structs/VkPresentTimesInfoEXT.adoc[]
+include::{generated}/api/structs/VkPresentTimingsInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:swapchainCount is the number of swapchains being presented to by
     this command.
-  * pname:pTimes is `NULL` or a pointer to an array of
-    sname:VkPresentTimeEXT elements with pname:swapchainCount entries.
-    If not `NULL`, each element of pname:pTimes contains the earliest present
-    time or the minimum present duration for the image corresponding to the
-    entry in the sname:VkPresentInfoKHR::pname:pImageIndices array.
+  * pname:pTimingInfos is `NULL` or a pointer to an array of
+    sname:VkPresentTimingInfoEXT elements with pname:swapchainCount entries.
+    If not `NULL`, each element of pname:pTimingInfos contains timing
+    information for the presentation of the image corresponding to the entry
+    in the sname:VkPresentInfoKHR::pname:pImageIndices array.
 
-The semantics of a specified target present time or duration only apply to
-the following present modes:
+The semantics of target presentation time or duration vary depending on the presentation mode:
 
   * ename:VK_PRESENT_MODE_FIFO_KHR.
-    Tearing cannot be observed.
+    Tearing cannot: be observed.
     The first queued image is dequeued and presented if
     both: 1) its associated wait semaphore(s) have signaled, and 2)
     its target present time is less-than or equal-to the current time.
@@ -52,24 +44,61 @@ the following present modes:
     displayed at the start of the vertical blanking period, or may: be
     treated the same as for ename:VK_PRESENT_MODE_IMMEDIATE_KHR.
 
+Other presentation modes do not support a target presentation time or duration.
+
 .Valid Usage
 ****
   * pname:swapchainCount must: be the same value as
     sname:VkPresentInfoKHR::pname:swapchainCount, where
     sname:VkPresentInfoKHR is in the pname:pNext chain of this
-    sname:VkPresentTimesInfoEXT structure.
+    sname:VkPresentTimingsInfoEXT structure.
   * For each member of sname:VkPresentInfoKHR::pname:pSwapchains, if the
-    associated sname:VkPresentTimeEXT is non-zero, the present mode must:
-    be ename:VK_PRESENT_MODE_FIFO_KHR or
+    associated sname:VkPresentTimeEXT is non-zero, the current present mode
+    must: be ename:VK_PRESENT_MODE_FIFO_KHR or
     ename:VK_PRESENT_MODE_FIFO_RELAXED_KHR.
-  * For each member of sname:VkPresentInfoKHR::pname:pSwapchains, if the
-    associated sname:VkPresentTimeEXT is non-zero, the swapchain must: have
-    been created with a non-zero
-    sname:VkSwapchainPresentTimingCreateInfoEXT::pname:presentStageTarget
 ****
 
-include::{generated}/validity/structs/VkPresentTimesInfoEXT.adoc[]
+include::{generated}/validity/structs/VkPresentTimingsInfoEXT.adoc[]
 --
+
+
+[open,refpage='VkPresentTimingInfoEXT',desc='Specifies per-present per-swapchain timing information',type='structs']
+--
+The sname:VkPresentTimingInfoEXT structure is defined as:
+
+include::{generated}/api/structs/VkPresentTimingInfoEXT.adoc[]
+
+  * pname:sType is a elink:VkStructureType value identifying this structure.
+  * pname:pNext is `NULL` or a pointer to a structure extending this
+    structure.
+  * pname:time is a sname:VkPresentTimeEXT specifying the target present
+    time or duration of the presentation request.
+  * pname:timeDomain is the time domain used to specify the absolute target
+    present time and the timing results in a subsequent
+    flink:vkGetPastPresentationTimingEXT call for the current presentation
+    request.
+  * pname:presentStageQueries is a valid tlink:VkPresentStageFlagsEXT value
+    indicating which present stages the presentation engine should collect
+    timing information for.
+  * pname:targetPresentStage is zero or a tlink:VkPresentStageFlagsEXT value
+    specifying which present stage pname:time is targeting.
+  * pname:presentAtNearestRefreshCycle is a flag indicating that the
+    application would like to complete pname:targetPresentStage at the start
+    of the refresh cycle that is closest to pname:time. If
+    pname:presentAtNearestRefreshCycle is ename:VK_TRUE, the presentation
+    engine may: complete the target present stage earlier than specified in
+    pname:time.
+
+.Valid Usage
+****
+  * If pname:presentStageTarget is not zero, it must: specify one and only
+    one stage.
+  * pname:presentStageTarget must: not be ename:VK_PRESENT_STAGE_IMAGE_HANDOFF_BIT_EXT
+****
+
+include::{generated}/validity/structs/VkPresentTimingInfoEXT.adoc[]
+--
+
 
 [open,refpage='VkPresentTimeEXT',desc='Specifying when an image should be presented',type='structs']
 --
@@ -79,27 +108,29 @@ The sname:VkPresentTimeEXT union is defined as:
 include::{generated}/api/structs/VkPresentTimeEXT.adoc[]
 
   * pname:targetPresentTime, if non-zero, specifies the earliest time the
-    application wants the image to complete the swapchain's target present
-    stage. A value of zero specifies that the presentation engine may:
-    display the image at any time allowed by the current present mode.
-  * pname:minPresentDuration, if non-zero, specifies the minimum duration in
-    nanoseconds before which the next image presentation request can: reach
-    the target present stage. A value of zero specifies that the
-    presentation engine may: display the image for any duration allowed by
-    the current present mode.
+    application wants the presentation engine to complete the swapchain's
+    target present stage. A value of zero specifies that the presentation
+    engine may: display the image at any time allowed by the current present
+    mode.
+  * pname:afterPresentDuration, if non-zero, specifies the minimum duration
+    in nanoseconds before which the next image presentation request can:
+    reach the target present stage, relative to the previous presentation
+    reaching that same stage. A value of zero specifies that the
+    presentation engine may: display the previous image for any duration
+    allowed by the current present mode.
 
 The contents of the sname:VkPresentTimeEXT union is interpreted depending on
 the associated sname:VkPresentInfoKHR::pname:pSwapchains member creation
 values. If
 sname:VkSwapchainPresentTimingCreateInfoEXT::pname:presentAtRelativeTime was
 ename:VK_FALSE when creating the pname:swapchain, pname:targetPresentTime is
-used. Otherwise, pname:minPresentDuration is used.
+used. Otherwise, pname:afterPresentDuration is used.
 
 pname:targetPresentTime is a time in nanoseconds, according to the
-time-domain being used. The presentation engine must: not complete the
-target present stage, specified in the associated swapchain
-slink:VkSwapchainPresentTimingCreateInfoEXT::pname:presentStageTarget, at an
-earlier time.
+time-domain specified in the associated
+slink:VkPresentTimingInfoEXT::pname:timeDomain. The presentation engine
+must: not complete the target present stage specified in
+slink:VkPresentTimingInfoEXT::pname:targetPresentStage at an earlier time.
 
 [NOTE]
 .Note
@@ -113,18 +144,6 @@ subtract a small delta from pname:targetPresentTime as a margin for error.
 ====
 
 include::{generated}/validity/structs/VkPresentTimeEXT.adoc[]
---
-
-[open,refpage='VkPresentStageTimeEXT',desc='Associate a present stage with a timestamp',type='structs']
---
-The sname:VkPresentStageTimeEXT structure is defined as:
-
-include::{generated}/api/structs/VkPresentStageTimeEXT.adoc[]
-
-  * pname:stage is a tlink:VkPresentStageFlagsEXT value specifying a present stage.
-  * pname:time is a time in nanoseconds associated with the pname:stage.
-
-include::{generated}/validity/structs/VkPresentStageTimeEXT.adoc[]
 --
 
 [open,refpage='VkPresentStageFlagBitsEXT',desc='Bitmask specifying stages of the image presentation process',type='enums']

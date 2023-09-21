@@ -8,7 +8,8 @@ Traditional game and real-time-animation applications frequently use
 ename:VK_PRESENT_MODE_FIFO_KHR so that presentable images are updated during
 the vertical blanking period of a given refresh cycle (RC) of the
 presentation engine's display.
-This avoids the visual anomaly known as tearing.
+On fixed refresh rate displays, this avoids the visual anomaly known as
+tearing.
 
 However, synchronizing the presentation of images with the RC does not
 prevent all forms of visual anomalies.
@@ -19,17 +20,10 @@ others.
 Sometimes the animation appears to freeze, when the same image is used for
 more RCs than other images.
 
-In order to minimize stuttering, an application needs to: 1) render
-and present images at a consistent rate that is a multiple of the
-presentation engine's refresh rate; 2) correctly position its geometry
-for when the presentable image will be displayed to the user.
-Applications can: benefit from communication of timing information with the
-presentation engine and its display.
-For example, applications can: determine information about the refresh
-rate of the display/compositor, can: specify when an image should be
-presented, and can: determine when an image was actually presented.
-This allows the application's animation to look smooth to the user, with
-no stuttering.
+In order to minimize stuttering, an application needs to: 1) render and
+present images at a consistent rate that is, on fixed refresh rate displays,
+a multiple of the presentation engine's refresh rate; 2) correctly position
+its geometry for when the presentable image will be displayed to the user.
 The
 ifdef::VK_EXT_present_timing[]
 `VK_EXT_present_timing`
@@ -55,40 +49,26 @@ The sname:VkSwapchainPresentTimingCreateInfoEXT structure is defined as:
 
 include::{generated}/api/structs/VkSwapchainPresentTimingCreateInfoEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:presentTimingQueueSize is the size of the swapchain's internal
     storage holding presentation timing results.
-  * pname:presentStageQueries is a tlink:VkPresentStageFlagsEXT mask
-    specifying the stages that will be measured and reported by
-    flink:vkGetPastPresentationTimingEXT.
-  * pname:presentStageTarget is zero or a tlink:VkPresentStageFlagsEXT value
-    specifying which present stage to target when providing
-    target present times to present operations.
   * pname:presentAtRelativeTime specifies whether target present times are
     to be interpreted as relative times.
 
-If pname:presentStageTarget is not zero, a non-zero slink:VkPresentTimeEXT
-can: be provided when presenting an image of the swapchain.
+When timing collection is enabled via the <<features-presentTiming,
+pname:presentTiming>> feature, resources may: be allocated by the
+implementation for an internal queue to collect results. The size of that
+queue is specified by pname:presentTimingQueueSize.
 
 .Valid Usage
 ****
-  * pname:presentStageQueries must: be equal to, or a subset of
-    slink:VkPresentTimingSurfaceCapabilitiesEXT::pname:presentStageQueries
-    used to create slink:VkSwapchainCreateInfoKHR::pname:surface
-  * If the <<features-presentAtAbsoluteTime, pname:presentAtAbsoluteTime>>
-    or <<features-presentAtRelativeTime, pname:presentAtRelativeTime>>
-    feature is not enabled, pname:presentStageTarget must: be zero
+  * If the <<features-presentTiming, pname:presentTiming>> feature is not
+    enabled, pname:presentTimingQueueSize must: be zero
   * If the <<features-presentAtRelativeTime, pname:presentAtRelativeTime>>
     feature is not enabled, pname:presentAtRelativeTime must: be
     ename:VK_FALSE
-  * If pname:presentStageTarget is not zero, it must: specify one and only
-    one stage supported in
-    slink:VkPresentTimingSurfaceCapabilitiesEXT::pname:presentStageTargets
-    associated with the slink:VkSwapchainCreateInfoKHR::pname:surface
-  * If pname:presentAtRelativeTime is ename:VK_TRUE,
-    pname:presentStageTarget must: not zero
 ****
 
 include::{generated}/validity/structs/VkSwapchainPresentTimingCreateInfoEXT.adoc[]
@@ -124,7 +104,7 @@ The sname:VkSwapchainTimingPropertiesEXT structure is defined as:
 
 include::{generated}/api/structs/VkSwapchainTimingPropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:refreshDuration is zero; or is an indication of the duration
@@ -132,7 +112,7 @@ include::{generated}/api/structs/VkSwapchainTimingPropertiesEXT.adoc[]
     If the presentation engine is operating as an FRR display, this is the
     number of nanoseconds from the start of one refresh cycle to the
     start of the next refresh cycle.
-    If the presentation engine is operating as an VRR display
+    If the presentation engine is operating as a VRR display
     (i.e. refresh cycles may: have variable length), this is the
     minimum number of nanoseconds from the start of one refresh cycle
     to the start of the next refresh cycle.
@@ -157,8 +137,8 @@ The rate at which an application renders and presents new images is known as
 the image present rate (IPR, a.k.a. frame rate).
 The inverse of IPR, or the duration between each image present, is the image
 present duration (IPD).
-In order to provide a smooth, stutter-free animation, an application needs
-its IPD to be a multiple of pname:refreshDuration.
+On FRR displays, in order to provide a smooth, stutter-free animation, an
+application needs its IPD to be a multiple of pname:refreshDuration.
 For example, if a display has a 60Hz refresh rate, pname:refreshDuration
 will be a value in nanoseconds that is approximately equal to 16.67ms.
 In such a case, an application will want an IPD of 16.67ms (1X multiplier of
@@ -236,46 +216,13 @@ The sname:VkSwapchainTimeDomainPropertiesEXT structure is defined as:
 
 include::{generated}/api/structs/VkSwapchainTimeDomainPropertiesEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
   * pname:timeDomain is a elink:VkTimeDomainEXT value representing a time
     domain that is available for the swapchain.
 
 include::{generated}/validity/structs/VkSwapchainTimeDomainPropertiesEXT.adoc[]
---
-
-[open,refpage='vkSetSwapchainTimingEXT',desc='Set timing information for a swapchain',type='protos']
---
-
-To set timing information for a swapchain, call:
-
-include::{generated}/api/protos/vkSetSwapchainTimingEXT.adoc[]
-
-  * pname:device is the device associated with pname:swapchain.
-  * pname:swapchain is the swapchain to obtain timing properties for.
-  * pname:pSwapchainTimingInfo is `NULL` or a pointer to an instance of
-    the sname:VkSwapchainTimingInfoEXT structure.  If `NULL`,
-    display timing is disabled for the swapchain, otherwise enables
-    display timing and specifies which time domain to use.
-
-include::{generated}/validity/protos/vkSetSwapchainTimingEXT.adoc[]
---
-
-[open,refpage='VkSwapchainTimingInfoEXT',desc='Specify which of the available time domains to use for a swapchain',type='structs']
---
-
-The sname:VkSwapchainTimingInfoEXT structure is defined as:
-
-include::{generated}/api/structs/VkSwapchainTimingInfoEXT.adoc[]
-
-  * pname:sType is the type of this structure.
-  * pname:pNext is `NULL` or a pointer to a structure extending this
-    structure.
-  * pname:timeDomain is a elink:VkTimeDomainEXT value representing the time
-    domain that should be used with the swapchain.
-
-include::{generated}/validity/structs/VkSwapchainTimingInfoEXT.adoc[]
 --
 
 [open,refpage='vkGetPastPresentationTimingEXT',desc='Obtain timing of a previously-presented image',type='protos']
@@ -300,11 +247,17 @@ include::{generated}/api/protos/vkGetPastPresentationTimingEXT.adoc[]
   * pname:device is the device associated with pname:swapchain.
   * pname:swapchain is the swapchain to obtain presentation timing
     information duration for.
+  * pname:timeout specifies how long the function waits, in nanoseconds, if
+    no results are available.
   * pname:pPresentationTimingCount is a pointer to an integer related to the
     number of sname:VkPastPresentationTimingEXT structures to query, as
     described below.
-  * pname:pPresentationTimings is either `NULL` or a pointer to an an array
+  * pname:pPresentationTimings is `NULL` or a pointer to an an array
     of sname:VkPastPresentationTimingEXT structures.
+  * pname:pTimingPropertiesChanged is `NULL` or a pointer to a
+    basetype:VkBool32, which is set to ename:VK_TRUE if the swapchain timing
+    properties have changed since the last call to
+    fname:vkGetPastPresentationTimingEXT.
 
 If pname:pPresentationTimings is `NULL`, then the number of available
 timing records for the given pname:swapchain is returned in
@@ -314,29 +267,48 @@ the user to the number of elements in the pname:pPresentationTimings array,
 and on return the variable is overwritten with the number of structures
 actually written to pname:pPresentationTimings.
 If the value of pname:pPresentationTimingCount is less than the number of
-newly-available timing records, at most pname:pPresentationTimingCount
-structures are written.
-If pname:pPresentationTimingCount is smaller than the number of
-newly-available timing records for the given pname:swapchain,
-ename:VK_INCOMPLETE is returned instead of ename:VK_SUCCESS to indicate
-that not all the available values were returned.
-Elements of pname:pPresentationTimings are arranged in ascending order of
-present ids.
+newly-available timing records for the given pname:swapchain, at most
+pname:pPresentationTimingCount structures are written, and
+ename:VK_INCOMPLETE is returned instead of ename:VK_SUCCESS to indicate that
+not all the available values were returned.
+
+fname:vkGetPastPresentationTimingEXT may: return incomplete results,
+containing only information for a subset of the requested present
+stages. Further calls to fname:vkGetPastPresentationTimingEXT will keep
+providing all available results for a previously incomplete entry until it
+is complete.
+
+The implementation must: return a sname:VkPastPresentationTimingEXT for
+every flink:vkQueuePresentKHR referencing pname:swapchain where a non-zero
+slink:VkPresentTimingInfoEXT::pname:presentStageQueries was specified and at
+least one present stage has available results.
 
 Timing information may: become available out of order with regards to their
 associated flink:vkQueuePresentKHR commands.
 
-Because timing information for some present stages may: be available earlier
-than for some others, fname:vkGetPastPresentationTimingEXT may: return
-incomplete results, containing only information for a subset of the
-requested present stages. Further calls to
-fname:vkGetPastPresentationTimingEXT will keep providing all available
-results for a previously incomplete entry until it is complete.
+Results for specific outstanding presentation requests can: be queried by
+setting the pname:presentId field of input pname:pPresentationTimings
+entries. If pname:timeout is not zero, fname:vkGetPastPresentationTimingEXT
+will block for that many nanoseconds or until all the results for the
+specified present ids are available. If the timeout expires,
+ename:VK_TIMEOUT is returned and no result is written to
+pname:pPresentationTimings. If pname:timeout is code:UINT64_MAX, the timeout
+period is treated as infinite.
 
 Upon return, zero or more slots of the pname:swapchain internal timing
-collection queue, equal to the number of completed entries written to
-pname:pPresentationTimings for which all present stages have been returned,
-are made available for future fname:vkQueuePresentKHR calls.
+collection queue, equal to the number of entries written to
+pname:pPresentationTimings for which pname:reportComplete is ename:VK_TRUE,
+are made available for future fname:vkQueuePresentKHR calls. Elements of
+pname:pPresentationTimings are arranged in ascending order of present ids.
+
+There is no requirement for any precise timing relationship between the
+completion of a present stage and the availability of any associated timing
+information.
+
+As an exception to the normal rules for objects which are externally
+synchronized, pname:swapchain may: be simultaneously used by other threads
+in calls to functions other than flink:vkDestroySwapchainKHR. Access to the
+swapchain timing information must: be atomic within the implementation.
 
 include::{generated}/validity/protos/vkGetPastPresentationTimingEXT.adoc[]
 --
@@ -348,89 +320,61 @@ The sname:VkPastPresentationTimingEXT structure is defined as:
 
 include::{generated}/api/structs/VkPastPresentationTimingEXT.adoc[]
 
-  * pname:sType is the type of this structure.
+  * pname:sType is a elink:VkStructureType value identifying this structure.
   * pname:pNext is `NULL` or a pointer to a structure extending this
     structure.
-  * pname:presentId is an application-provided value that was given to a
-    previous fname:vkQueuePresentKHR command via
+  * pname:presentId is zero or an application-provided value that was given
+    to a previous fname:vkQueuePresentKHR command via
     slink:VkPresentIdKHR::pname:pPresentIds.
-    It can: be used to uniquely identify a previous present with the
-    flink:vkQueuePresentKHR command. If no slink:VkPresentIdKHR was provided
-    or if the specified present id value was zero, pname:presentId is zero.
-  * pname:targetPresentTime is an application-provided value that was given
-    to a previous flink:vkQueuePresentKHR command via
-    slink:VkPresentTimeEXT::pname:targetPresentTime.
-    If non-zero, it was used by the application to indicate that an image
-    not be presented any sooner than pname:targetPresentTime, relative to
-    the stage specified in
-    slink:VkSwapchainPresentTimingCreateInfoEXT::pname:presentStageTarget.
-    If the pname:swapchain is using relative present times, it is zero and
-    the actual present duration can: be obtained by comparing the
-    pname:pPresentStages results of consecutive presents.
   * pname:presentStageCount is a count of items contained in
     pname:pPresentStages.
-  * pname:pPresentStages is `NULL` or a pointer to an array of
-    slink:VkPresentStageTimeEXT providing timing information for each of the
-    present stages requested in
-    slink:VkSwapchainPresentTimingCreateInfoEXT::pname:presentStageQueries.
-  * pname:timingPropertiesChanged is ename:VK_TRUE if the swapchain's
-    timing properties have changed since the last time those
-    properties were queried with
-    flink:vkGetSwapchainTimingPropertiesEXT, otherwise the properties
-    have not changed.
-  * pname:timeDomainChanged is ename:VK_TRUE if the time domain enabled for
-    the swapchain is not currently available.
+  * pname:pPresentStages a pointer to an array of
+    slink:VkPresentStageTimeEXT providing timing information for the
+    presentation request associated with pname:presentId.
+  * pname:timeDomain is the ename:VkTimeDomainEXT used by the presentation
+    engine to report times in pname:pPresentStages.
   * pname:reportComplete is ename:VK_TRUE if the presentation engine
     has reported all the requested results in pname:pPresentStages.
+
+If pname:presentId is not zero, pname:presentStageCount must: be set by the
+application to be at least equal to the number of present stages specified
+in slink:VkPresentTimingInfoEXT::pname:presentStagesQueries for the
+associated flink:vkQueuePresentKHR call. Otherwise, pname:presentStageCount
+must: be at least equal to the highest number of present stages queried
+among all presentation requests for which there are outstanding results.
 
 Timing information for some present stages may: have a time value of 0,
 indicating that results for that present stage are not available.
 
-For systems with multiple entities operating downstream of the presentation
+For systems with multiple entities operating within the presentation
 engine, such as multiple displays, pname:pPresentStages will return timing
 results for at least one entity which has been affected by the presentation.
 
-If pname:pPresentStages is `NULL`, then the number of available present
-stages reports is returned in pname:presentStageCount. Otherwise,
-pname:presentStageCount must: be set by the application to the number of
-elements in the pname:pPresentStages array, and on return the variable is
-overwritten with the number of entries actually written to
-pname:pPresentStages. If the value of pname:presentStageCount is less than
-the number of available present stages reports, at most
-pname:presentStageCount will be written to pname:pPresentStages.
-
-If pname:timeDomainChanged is ename:VK_TRUE, the application must: query
-what time domains are available and enable present timing with a
-currently-available time domain. If the currently-enabled time domain is the
-opaque domain of ename:VK_TIME_DOMAIN_SWAPCHAIN_LOCAL_EXT, it is possible
-that ename:VK_TIME_DOMAIN_SWAPCHAIN_LOCAL_EXT will be returned by
-flink:vkGetSwapchainTimeDomainsEXT. In such a case, the presentation engine
-may: have multiple opaque time domains that it is switching between.
-
-If any of pname:timeDomainChanged or pname:timingPropertiesChanged is
-ename:VK_TRUE, an application must: not compare the values of
-pname:pPresentStages with any other values, as the presentation engine may
-not be able to provide accurate values.
-
-The results for a given pname:swapchain and present id are returned from
-fname:vkGetPastPresentationTimingEXT until pname:reportComplete is
-ename:VK_TRUE and all available results have been reported in
-pname:pPresentStages.
+pname:timeDomain may: be different than the time domain that was specified
+in slink:VkPresentTimingInfoEXT::pname:timeDomain if the requirements for
+using this time domain could not be met at the time the presentation engine
+processed the presentation request. In such a case, the presentation engine
+may: pick a time domain to fall back to and report results in that domain.
+Applications can: continue to use this fallback time domain in future
+flink:vkQueuePresentKHR calls, or they can: call
+flink:vkGetSwapchainTimeDomainsEXT to choose from the currently supported
+time domains.
 
 include::{generated}/validity/structs/VkPastPresentationTimingEXT.adoc[]
 
 [NOTE]
 .Note
 ====
-An application can: determine its optimal IPD by using the
+An application can: determine its optimal IPD in FRR scenarios by using the
 sname:VkPastPresentationTimingEXT values.
 
 For a given target present stage, if `pPresentStages[targetStageIndex].time`
-is one or more refresh cycle durations later than pname:targetPresentTime,
-the application knows that the image was presented late. In order to avoid
-visual anomalies, it can: increase its IPD by a multiple of the refresh
-cycle duration that approximately corresponds to the difference between
-`pPresentStages[targetStageIndex].time` and pname:targetPresentTime.
+is one or more refresh cycle durations later than the associated present
+pname:targetPresentTime, the application knows that the image was presented
+late. In order to avoid visual anomalies, it can: increase its IPD by a
+multiple of the refresh cycle duration that approximately corresponds to the
+difference between `pPresentStages[targetStageIndex].time` and
+pname:targetPresentTime.
 
 If `pPresentStages[targetStageIndex].time` and pname:targetPresentTime are
 consistently approximately equal to each other, the application knows that
@@ -463,11 +407,22 @@ full-screen, the timing properties may: be VRR.
 The available time domains for a swapchain may: change for similar or
 identical reasons.
 Therefore, it is possible that the same event will cause both
-pname:timingPropertiesChanged and pname:timeDomainChanged to become
-ename:VK_TRUE.
-It is also possible that an event can: cause only
-pname:timingPropertiesChanged to become ename:VK_TRUE.
+pname:timingPropertiesChanged to become ename:VK_TRUE and and
+pname:timeDomain to be different than the time domain requested in
+sname:VkPresentTimingInfoEXT.
 ====
+--
+
+[open,refpage='VkPresentStageTimeEXT',desc='Associate a present stage with a timestamp',type='structs']
+--
+The sname:VkPresentStageTimeEXT structure is defined as:
+
+include::{generated}/api/structs/VkPresentStageTimeEXT.adoc[]
+
+  * pname:stage is a tlink:VkPresentStageFlagsEXT value specifying a present stage.
+  * pname:time is a time in nanoseconds associated with the pname:stage.
+
+include::{generated}/validity/structs/VkPresentStageTimeEXT.adoc[]
 --
 endif::VK_EXT_present_timing[]
 

@@ -1404,13 +1404,14 @@ implementation-specific reasons outside of the application's control.
 endif::VK_EXT_full_screen_exclusive[]
 
 ifdef::VK_EXT_present_timing[]
-For any pname:pSwapchains member of pname:pPresentInfo, if that swapchain has
-enabled the collection of presentation timings via
-flink:vkSetSwapchainTimingEXT, one entry of its internal timing queue is
-reserved until the results have been collected by
-flink:vkGetPastPresentationTimingEXT.
+
+For any pname:pSwapchains member of pname:pPresentInfo, if a slink: is
+provided in the pNext chain with a non-zero pname:presentStageQueries, one
+entry of its internal timing queue is reserved until the results have been
+collected by flink:vkGetPastPresentationTimingEXT.
 ename:VK_ERROR_PRESENT_TIMING_QUEUE_FULL_EXT is returned if a swapchain is
 unable to reserve an entry in its queue.
+
 endif::VK_EXT_present_timing[]
 
 include::{generated}/validity/protos/vkQueuePresentKHR.adoc[]

@@ -7,7 +7,7 @@ include::{generated}/meta/{refprefix}VK_EXT_present_timing.adoc[]
 === Other Extension Metadata
 
 *Last Modified Date*::
-    2023-03-07
+    2024-02-10
 *IP Status*::
     No known IP claims.
 *Contributors*::
@@ -171,7 +171,7 @@ In such cases, the special value of zero allows the application to
 indicate that timing feedback is desired, but that no
 targetPresentTime is requested.
 Later, once the application has obtained feedback, it can specify
-targetPresentTime by using the results actualPresentTime.
+targetPresentTime by using the result's actualPresentTime.
 
 
 7) How long before an application’s request for new image duration is honored?
@@ -198,10 +198,8 @@ the latency was approximately 5 refresh cycles (83.33ms).
 For higher-frequency displays, the latency may have a larger number of refresh
 cycles.
 
-Is there value in having a query for the application to know how long it may
-have to wait for feedback? Can such a query be reasonably answered by the
-driver? Is there other interesting information in this space that we may
-wish to capture?
+Can such a query be reasonably answered by the driver? Is there other
+interesting information in this space that we may wish to capture?
 
 
 9) Do we have a query(s) about the number of VkPastPresentationTimingEXT
@@ -247,3 +245,8 @@ Split it out into its own extension and define the interaction here.
 
   * Revision 4, 2023-05-03 (Lionel Duc)
   ** Change target and feedback times to be associated with a well-defined present stage.
+
+  * Revision 5, 2024-02-10 (Lionel Duc)
+  ** Move swapchain state into per-present struct, removing the need for vkSetSwapchainTimingEXT
+  ** Add synchronous behavior to vkGetPastPresentationTimingEXT
+  ** Add stage-local time domain

@@ -3210,14 +3210,12 @@ typedef void* <name>MTLSharedEvent_id</name>;
         <type category="struct" name="VkSwapchainPresentTimingCreateInfoEXT" structextends="VkSwapchainCreateInfoKHR">
             <member values="VK_STRUCTURE_TYPE_SWAPCHAIN_PRESENT_TIMING_CREATE_INFO_EXT"><type>VkStructureType</type> <name>sType</name></member>
             <member optional="true">const <type>void</type>*      <name>pNext</name></member>
-            <member><type>uint32_t</type>                         <name>presentTimingQueueSize</name></member>
-            <member><type>VkPresentStageFlagsEXT</type>           <name>presentStageQueries</name><comment>present stages to provide feedback for</comment></member>
-            <member><type>VkPresentStageFlagsEXT</type>           <name>presentStageTarget</name><comment>present stage used to interpret the target present time</comment></member>
+            <member><type>uint32_t</type>                         <name>presentTimingQueueSize</name><comment>size of the swapchain's internal timing results queue</comment></member>
             <member><type>VkBool32</type>                         <name>presentAtRelativeTime</name><comment>if using target present times, interpret them as relative times</comment></member>
         </type>
         <type category="struct" name="VkSwapchainTimingPropertiesEXT">
             <member values="VK_STRUCTURE_TYPE_SWAPCHAIN_TIMING_PROPERTIES_EXT"><type>VkStructureType</type> <name>sType</name></member>
-            <member optional="true">const <type>void</type>*      <name>pNext</name></member>
+            <member optional="true"><type>void</type>*      <name>pNext</name></member>
             <member><type>uint64_t</type>                         <name>refreshDuration</name><comment>Number of nanoseconds from the start of one refresh cycle to the next</comment></member>
             <member><type>VkBool32</type>                         <name>variableRefresh</name></member>
         </type>
@@ -3226,35 +3224,37 @@ typedef void* <name>MTLSharedEvent_id</name>;
             <member optional="true"><type>void</type>*            <name>pNext</name></member>
             <member><type>VkTimeDomainEXT</type>                  <name>timeDomain</name><comment>Available time domain to use with the swapchain</comment></member>
         </type>
-        <type category="struct" name="VkSwapchainTimingInfoEXT">
-            <member values="VK_STRUCTURE_TYPE_SWAPCHAIN_TIMING_INFO_EXT"><type>VkStructureType</type> <name>sType</name></member>
-            <member optional="true">const <type>void</type>*      <name>pNext</name></member>
-            <member><type>VkTimeDomainEXT</type>                  <name>timeDomain</name><comment>Time domain selected by the application to be used for the swapchain time values</comment></member>
-        </type>
         <type category="struct" name="VkPresentStageTimeEXT">
             <member><type>VkPresentStageFlagsEXT</type>           <name>stage</name></member>
             <member><type>uint64_t</type>                         <name>time</name><comment>Time in nanoseconds of the associated stage</comment></member>
         </type>
         <type category="struct" name="VkPastPresentationTimingEXT">
             <member values="VK_STRUCTURE_TYPE_PAST_PRESENTATION_TIMING_EXT"><type>VkStructureType</type> <name>sType</name></member>
-	    <member optional="true">const <type>void</type>*      <name>pNext</name></member>
+	    <member optional="true"><type>void</type>*            <name>pNext</name></member>
             <member><type>uint64_t</type>                         <name>presentId</name><comment>Application-provided identifier, previously given to vkQueuePresentKHR</comment></member>
-            <member><type>uint64_t</type>                         <name>targetPresentTime</name><comment>Earliest time an image should have been presented, previously given to vkQueuePresentKHR</comment></member>
-            <member><type>uint32_t</type>                         <name>presentStageCount</name><comment>TBD</comment></member>
-            <member><type>VkPresentStageTimeEXT</type>*           <name>pPresentStages</name><comment>TBD</comment></member>
-            <member><type>VkBool32</type>                         <name>timingPropertiesChanged</name><comment>VK_TRUE if swapchain's timing properties changed since last queried</comment></member>
-            <member><type>VkBool32</type>                         <name>timeDomainChanged</name><comment>VK_TRUE if the swapchain no longer supports the enabled time domain</comment></member>
-            <member><type>VkBool32</type>                         <name>reportComplete</name><comment>VK_TRUE if all the present stages have been reported.</comment></member>
+            <member><type>uint32_t</type>                         <name>presentStageCount</name><comment>Number of present stages results available in pPresentStages</comment></member>
+            <member len="presentStageCount"><type>VkPresentStageTimeEXT</type>*           <name>pPresentStages</name><comment>Reported timings for each present stage</comment></member>
+            <member><type>VkTimeDomainEXT</type>                  <name>timeDomain</name><comment>Time domain of the present stages</comment></member>
+            <member><type>VkBool32</type>                         <name>reportComplete</name><comment>VK_TRUE if all the present stages have been reported</comment></member>
         </type>
-        <type category="struct" name="VkPresentTimesInfoEXT" structextends="VkPresentInfoKHR">
-            <member values="VK_STRUCTURE_TYPE_PRESENT_TIMES_INFO_EXT"><type>VkStructureType</type> <name>sType</name></member>
+        <type category="struct" name="VkPresentTimingsInfoEXT" structextends="VkPresentInfoKHR">
+            <member values="VK_STRUCTURE_TYPE_PRESENT_TIMINGS_INFO_EXT"><type>VkStructureType</type> <name>sType</name></member>
             <member optional="true">const <type>void</type>*      <name>pNext</name></member>
             <member><type>uint32_t</type>                         <name>swapchainCount</name><comment>Copy of VkPresentInfoKHR::swapchainCount</comment></member>
-            <member len="swapchainCount" optional="true">const <type>VkPresentTimeEXT</type>*   <name>pTimes</name><comment>When to present images</comment></member>
+            <member len="swapchainCount" optional="true">const <type>VkPresentTimingInfoEXT</type>* <name>pTimingInfos</name><comment>Present timing details for each swapchain</comment></member>
+        </type>
+        <type category="struct" name="VkPresentTimingInfoEXT">
+            <member values="VK_STRUCTURE_TYPE_PRESENT_TIMING_INFO_EXT"><type>VkStructureType</type> <name>sType</name></member>
+            <member optional="true">const <type>void</type>*      <name>pNext</name></member>
+            <member><type>VkPresentTimeEXT</type>                 <name>time</name><comment>target present time or duration</comment></member>
+            <member><type>VkTimeDomainEXT</type>                  <name>timeDomain</name><comment>Time domain to interpret the target present time and collect present stages timings with</comment></member>
+            <member><type>VkPresentStageFlagsEXT</type>           <name>presentStageQueries</name><comment>Present stages to collect timing information for</comment></member>
+            <member><type>VkPresentStageFlagsEXT</type>           <name>targetPresentStage</name><comment>Present stage to target with a target present time</comment></member>
+            <member><type>VkBool32</type>                         <name>presentAtNearestRefreshCycle</name><comment>Whether the presentation engine is allowed to round down the target present time to the nearest refresh cycle</comment></member>
         </type>
         <type category="union" name="VkPresentTimeEXT" comment="// Union allowing specification of either absolute or relative present time. Actual value selected is based on swapchain info.">
             <member><type>uint64_t</type>         <name>targetPresentTime</name></member>
-            <member><type>uint64_t</type>         <name>minPresentDuration</name></member>
+            <member><type>uint64_t</type>         <name>afterPresentDuration</name></member>
         </type>
         <type category="struct" name="VkSwapchainCalibratedTimestampInfoEXT" structextends="VkCalibratedTimestampInfoEXT">
             <member values="VK_STRUCTURE_TYPE_SWAPCHAIN_CALIBRATED_TIMESTAMP_INFO_EXT"><type>VkStructureType</type> <name>sType</name></member>
@@ -12536,12 +12536,6 @@ typedef void* <name>MTLSharedEvent_id</name>;
             <param externsync="true"><type>VkQueue</type> <name>queue</name></param>
             <param externsync="pPresentInfo-&gt;pWaitSemaphores[],pPresentInfo-&gt;pSwapchains[]">const <type>VkPresentInfoKHR</type>* <name>pPresentInfo</name></param>
         </command>
-        <command successcodes="VK_SUCCESS" errorcodes="VK_ERROR_OUT_OF_HOST_MEMORY,VK_ERROR_OUT_OF_DEVICE_MEMORY,VK_ERROR_SURFACE_LOST_KHR">
-            <proto><type>VkResult</type> <name>vkSetSwapchainTimingEXT</name></proto>
-            <param><type>VkDevice</type> <name>device</name></param>
-            <param externsync="true"><type>VkSwapchainKHR</type> <name>swapchain</name></param>
-            <param optional="true">const <type>VkSwapchainTimingInfoEXT</type>* <name>pSwapchainTimingInfo</name></param>
-        </command>
         <command successcodes="VK_SUCCESS" errorcodes="VK_ERROR_OUT_OF_HOST_MEMORY,VK_ERROR_OUT_OF_DEVICE_MEMORY,VK_ERROR_NATIVE_WINDOW_IN_USE_KHR">
             <proto><type>VkResult</type> <name>vkCreateViSurfaceNN</name></proto>
             <param><type>VkInstance</type> <name>instance</name></param>
@@ -13164,12 +13158,14 @@ typedef void* <name>MTLSharedEvent_id</name>;
             <param><type>uint32_t</type> <name>set</name></param>
             <param noautovalidity="true">const <type>void</type>* <name>pData</name></param>
         </command>
-        <command successcodes="VK_SUCCESS,VK_INCOMPLETE" errorcodes="VK_ERROR_DEVICE_LOST,VK_ERROR_OUT_OF_DATE_KHR,VK_ERROR_SURFACE_LOST_KHR">
+        <command successcodes="VK_SUCCESS,VK_INCOMPLETE,VK_TIMEOUT" errorcodes="VK_ERROR_DEVICE_LOST,VK_ERROR_OUT_OF_DATE_KHR,VK_ERROR_SURFACE_LOST_KHR">
             <proto><type>VkResult</type> <name>vkGetPastPresentationTimingEXT</name></proto>
             <param><type>VkDevice</type> <name>device</name></param>
             <param externsync="true"><type>VkSwapchainKHR</type> <name>swapchain</name></param>
+            <param><type>uint64_t</type> <name>timeout</name></param>
             <param optional="false,true"><type>uint32_t</type>* <name>pPresentationTimingCount</name></param>
             <param optional="true" len="pPresentationTimingCount"><type>VkPastPresentationTimingEXT</type>* <name>pPresentationTimings</name></param>
+            <param optional="true"><type>VkBool32</type>* <name>pTimingPropertiesChanged</name></param>
         </command>
         <command>
             <proto><type>void</type> <name>vkSetHdrMetadataEXT</name></proto>
@@ -19996,20 +19992,21 @@ typedef void* <name>MTLSharedEvent_id</name>;
                 <command name="vkSignalSemaphoreKHR"/>
             </require>
         </extension>
-        <extension name="VK_EXT_present_timing" number="209" type="device" depends="VK_KHR_swapchain+VK_KHR_present_id+VK_KHR_get_surface_capabilities2" author="EXT" contact="Ian Elliott @ianelliott" supported="vulkan">
+        <extension name="VK_EXT_present_timing" number="209" type="device" depends="VK_KHR_swapchain+VK_KHR_present_id+VK_KHR_get_surface_capabilities2+VK_KHR_calibrated_timestamps" author="EXT" contact="Lionel Duc @nvlduc" supported="vulkan">
             <require>
-                <enum value="4"                                         name="VK_EXT_PRESENT_TIMING_SPEC_VERSION"/>
+                <enum value="5"                                         name="VK_EXT_PRESENT_TIMING_SPEC_VERSION"/>
                 <enum value="&quot;VK_EXT_present_timing&quot;"         name="VK_EXT_PRESENT_TIMING_EXTENSION_NAME"/>
                 <enum offset="0" extends="VkStructureType"              name="VK_STRUCTURE_TYPE_SWAPCHAIN_TIMING_PROPERTIES_EXT"/>
                 <enum offset="1" extends="VkStructureType"              name="VK_STRUCTURE_TYPE_SWAPCHAIN_TIME_DOMAIN_PROPERTIES_EXT"/>
                 <enum offset="2" extends="VkStructureType"              name="VK_STRUCTURE_TYPE_SWAPCHAIN_PRESENT_TIMING_CREATE_INFO_EXT"/>
-                <enum offset="3" extends="VkStructureType"              name="VK_STRUCTURE_TYPE_SWAPCHAIN_TIMING_INFO_EXT"/>
-                <enum offset="4" extends="VkStructureType"              name="VK_STRUCTURE_TYPE_PRESENT_TIMES_INFO_EXT"/>
+                <enum offset="3" extends="VkStructureType"              name="VK_STRUCTURE_TYPE_PRESENT_TIMINGS_INFO_EXT"/>
+                <enum offset="4" extends="VkStructureType"              name="VK_STRUCTURE_TYPE_PRESENT_TIMING_INFO_EXT"/>
                 <enum offset="5" extends="VkStructureType"              name="VK_STRUCTURE_TYPE_PAST_PRESENTATION_TIMING_EXT"/>
                 <enum offset="6" extends="VkStructureType"              name="VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_TIMING_FEATURES_EXT"/>
                 <enum offset="7" extends="VkStructureType"              name="VK_STRUCTURE_TYPE_PRESENT_TIMING_SURFACE_CAPABILITIES_EXT"/>
                 <enum offset="8" extends="VkStructureType"              name="VK_STRUCTURE_TYPE_SWAPCHAIN_CALIBRATED_TIMESTAMP_INFO_EXT"/>
-                <enum offset="0" extends="VkTimeDomainEXT"              name="VK_TIME_DOMAIN_SWAPCHAIN_LOCAL_EXT"/>
+                <enum offset="0" extends="VkTimeDomainKHR"              name="VK_TIME_DOMAIN_PRESENT_STAGE_LOCAL_EXT"/>
+                <enum offset="1" extends="VkTimeDomainKHR"              name="VK_TIME_DOMAIN_SWAPCHAIN_LOCAL_EXT"/>
                 <enum offset="0" extends="VkResult" dir="-"             name="VK_ERROR_PRESENT_TIMING_QUEUE_FULL_EXT"/>
                 <type name="VkPhysicalDevicePresentTimingFeaturesEXT"/>
                 <type name="VkPresentTimingSurfaceCapabilitiesEXT"/>
@@ -20017,9 +20014,9 @@ typedef void* <name>MTLSharedEvent_id</name>;
                 <type name="VkSwapchainPresentTimingCreateInfoEXT"/>
                 <type name="VkSwapchainTimingPropertiesEXT"/>
                 <type name="VkSwapchainTimeDomainPropertiesEXT"/>
-                <type name="VkSwapchainTimingInfoEXT"/>
                 <type name="VkPastPresentationTimingEXT"/>
-                <type name="VkPresentTimesInfoEXT"/>
+                <type name="VkPresentTimingsInfoEXT"/>
+                <type name="VkPresentTimingInfoEXT"/>
                 <type name="VkPresentTimeEXT"/>
                 <type name="VkPresentStageTimeEXT"/>
                 <type name="VkPresentStageFlagBitsEXT"/>
@@ -20027,7 +20024,6 @@ typedef void* <name>MTLSharedEvent_id</name>;
                 <command name="vkGetSwapchainTimingPropertiesEXT"/>
                 <command name="vkGetSwapchainTimeDomainsEXT"/>
                 <command name="vkGetPastPresentationTimingEXT"/>
-                <command name="vkSetSwapchainTimingEXT"/>
             </require>
         </extension>
         <extension name="VK_INTEL_shader_integer_functions2" number="210" type="device" depends="VK_KHR_get_physical_device_properties2" author="INTEL" contact="Ian Romanick @ianromanick" supported="vulkan">
