@@ -77,8 +77,11 @@ include::{generated}/validity/structs/VkSwapchainPresentTimingCreateInfoEXT.adoc
 [open,refpage='vkGetSwapchainTimingPropertiesEXT',desc='Obtain the display timing properties of the PE\'s display',type='protos']
 --
 
-To query the presentation engine's timing properties for a given swapchain,
-call:
+The implementation maintains an internal monotonically increasing counter
+which updates when the presentation engine's timing properties are modified.
+
+To query the presentation engine's current timing properties for a given
+swapchain, call:
 
 include::{generated}/api/protos/vkGetSwapchainTimingPropertiesEXT.adoc[]
 
@@ -86,6 +89,9 @@ include::{generated}/api/protos/vkGetSwapchainTimingPropertiesEXT.adoc[]
   * pname:swapchain is the swapchain to obtain timing properties for.
   * pname:pSwapchainTimingProperties is a pointer to an instance of the
     sname:VkSwapchainTimingPropertiesEXT structure.
+  * pname:pSwapchainTimingPropertiesCounter is `NULL` or a pointer to a
+    64-bit unsigned integer set by the implementation to the current value of
+    the swapchain's internal timing properties counter.
 
 .Valid Usage
 ****
@@ -247,17 +253,14 @@ include::{generated}/api/protos/vkGetPastPresentationTimingEXT.adoc[]
   * pname:device is the device associated with pname:swapchain.
   * pname:swapchain is the swapchain to obtain presentation timing
     information duration for.
-  * pname:timeout specifies how long the function waits, in nanoseconds, if
-    no results are available.
   * pname:pPresentationTimingCount is a pointer to an integer related to the
     number of sname:VkPastPresentationTimingEXT structures to query, as
     described below.
   * pname:pPresentationTimings is `NULL` or a pointer to an an array
     of sname:VkPastPresentationTimingEXT structures.
-  * pname:pTimingPropertiesChanged is `NULL` or a pointer to a
-    basetype:VkBool32, which is set to ename:VK_TRUE if the swapchain timing
-    properties have changed since the last call to
-    fname:vkGetPastPresentationTimingEXT.
+  * pname:pSwapchainTimingPropertiesCounter is `NULL` or a pointer to a
+    64-bit unsigned integer set by the implementation to the current value of
+    the swapchain's internal timing properties counter.
 
 If pname:pPresentationTimings is `NULL`, then the number of available
 timing records for the given pname:swapchain is returned in
@@ -284,16 +287,7 @@ slink:VkPresentTimingInfoEXT::pname:presentStageQueries was specified and at
 least one present stage has available results.
 
 Timing information may: become available out of order with regards to their
-associated flink:vkQueuePresentKHR commands.
-
-Results for specific outstanding presentation requests can: be queried by
-setting the pname:presentId field of input pname:pPresentationTimings
-entries. If pname:timeout is not zero, fname:vkGetPastPresentationTimingEXT
-will block for that many nanoseconds or until all the results for the
-specified present ids are available. If the timeout expires,
-ename:VK_TIMEOUT is returned and no result is written to
-pname:pPresentationTimings. If pname:timeout is code:UINT64_MAX, the timeout
-period is treated as infinite.
+associated presentation request submission order.
 
 Upon return, zero or more slots of the pname:swapchain internal timing
 collection queue, equal to the number of entries written to

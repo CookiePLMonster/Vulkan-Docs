@@ -112,7 +112,7 @@ typedef struct VkSwapchainPresentTimingCreateInfoEXT {
 * `presentTimingQueueSize` is the size of the internal queue which contains the timing data.
 * `presentAtRelativeTime` enables relative present timing if it is supported. See <<scheduling>>.
 
-When enabling presentation statistics , implementations are likely required to allocate an internal queue and other resources to collect the necessary timestamps. The size of that queue must be specified by the application in `presentTimingQueueSize`. Calling `vkQueuePresentKHR` with non-zero stage queries allocates a slot in that internal queue, while `vkGetPastPresentationTimingEXT` releases slots when complete results are returned.
+When enabling presentation statistics, implementations are likely required to allocate an internal queue and other resources to collect the necessary timestamps. The size of that queue must be specified by the application in `presentTimingQueueSize`. Calling `vkQueuePresentKHR` with non-zero stage queries allocates a slot in that internal queue, while `vkGetPastPresentationTimingEXT` releases slots when complete results are returned.
 
 When timing collection is enabled via the `presentTiming` feature, resources are allocated by the implementation for an internal queue to collect results. The size of that queue must be specified by the application in `presentTimingQueueSize`. Slots of this internal queue are reserved when calling `vkQueuePresentKHR` and released when calling `vkGetPastPresentationTimingEXT` if the corresponding report is marked as complete by `VkPastPresentationTimingEXT::reportComplete`.
 
@@ -125,10 +125,13 @@ For timing to be meaningful, the application needs to be aware of various time-r
 VkResult vkGetSwapchainTimingPropertiesEXT(
     VkDevice                                    device,
     VkSwapchainKHR                              swapchain,
-    VkSwapchainTimingPropertiesEXT*             pSwapchainTimingProperties);
+    VkSwapchainTimingPropertiesEXT*             pSwapchainTimingProperties,
+    uint64_t*                                   pSwapchainTimingPropertiesCounter);
 ----
 
-The structure is defined as:
+Swapchain timing properties may change dynamically at any time. To allow applications to detect changes in those properties, a monotonically increasing counter is used by the implementation to identify the current state. This counter increases every time the swapchain properties are modified. `pSwapchainTimingPropertiesCounter` is a pointer to a `uint64_t` set by the implementation to the value of the current timing properties counter.
+
+The `VkSwapchainTimingPropertiesEXT` structure is defined as:
 
 [source,c]
 ----
@@ -199,19 +202,16 @@ Applications can obtain timing information about previous presents using:
 VkResult vkGetPastPresentationTimingEXT(
     VkDevice                                    device,
     VkSwapchainKHR                              swapchain,
-    uint64_t                                    timeout,
     uint32_t*                                   pPresentationTimingCount,
     VkPastPresentationTimingEXT*                pPresentationTimings,
-    VkBool*                                     pTimingPropertiesChanged);
+    uint64_t*                                   pSwapchainTimingPropertiesCounter);
 ----
 
 If the value of `pPresentationTimingCount` is 0, the implementation sets it to the number of pending results available in the swapchain's internal queue. Otherwise, it contains the number of entries written to `pPresentationTimings` upon return. If the implementation is not able to write all the available results in the provided `pPresentationTimings` array, `VK_INCOMPLETE` is returned.
 
-The `VkPastPresentationTimingEXT::presentId` of the `pPresentationTimings` entries can be set to ids referencing outstanding presentation request results. When doing so, the function will only return the results for those presentation requests. If timeout is not zero, the function will block until all the results are available, up to `timeout` nanoseconds or until an error occurs. If `timeout` is `UINT64_MAX`, it is treated as infinite.
-
 Results for presentation requests whose entries in `pPresentationTimings` are marked as complete with `VkPastPresentationTimingEXT::reportComplete` will not be returned anymore. For each of those, a slot in the internal swapchain present timing queue is released. Incomplete results for presentation requests will keep being reported by `vkGetPastPresentationTimingEXT` until complete.
 
-`pTimingPropertiesChanged` indicates whether the timing properties of the swapchain have changed since the previous call to `vkGetPastPresentationTimingEXT`. If true, applications should query those properties again using `vkGetSwapchainTimingPropertiesEXT`.
+If `pSwapchainTimingPropertiesCounter` is not `NULL`, the implementation sets it to the current internal counter of the swapchain's timing properties. If its value is different than the last known counter value (from a previous call to `vkGetPastPresentationTimingEXT` or `vkGetSwapchainTimingPropertiesEXT`), applications should query those properties again using `vkGetSwapchainTimingPropertiesEXT`.
 
 `VkPastPresentationTimingEXT` is defined as:
 
@@ -345,7 +345,8 @@ To maintain a constant IPD, applications should use timing information collected
         .pNext = NULL
     };
 
-    vkGetSwapchainTimingPropertiesEXT(device, swapchain, &swapchainTimingProperties);
+    uint64_t currentTimingPropertiesCounter = 0;
+    vkGetSwapchainTimingPropertiesEXT(device, swapchain, &swapchainTimingProperties, &currentTimingPropertiesCounter);
 
     uint32_t timeDomainCount = 0;
     VkSwapchainTimeDomainPropertiesEXT *timeDomains;
@@ -371,19 +372,18 @@ To maintain a constant IPD, applications should use timing information collected
         timings[i].pPresentStages = (VkPastPresentationTimingEXT *) malloc(maxPresentStageCount * sizeof(VkPastPresentationTimingEXT));
     }
 
-    while (!done)
-    {
+    while (!done) {
         uint32_t timingCount = maxTimingCount;
-        VkBool timingPropertiesChanged = VK_FALSE;
+        uint64_t newTimingPropertiesCounter = 0;
 
         for (i = 0; i < maxTimingCount; ++i) {
             timings[i].presentId = 0ull;
         }
 
-        vkGetPastPresentationTimingEXT(device, swapchain, 0ull, &timingCount, &timings, &timingPropertiesChanged);
+        vkGetPastPresentationTimingEXT(device, swapchain, &timingCount, &timings, &newTimingPropertiesCounter);
 
-        if (timingPropertiesChanged || currentPresentId == 1) {
-            vkGetSwapchainTimingPropertiesEXT(device, swapchain, &swapchainTimingProperties);
+        if (newTimingPropertiesCounter != currentTimingPropertiesCounter || currentPresentId == 1) {
+            vkGetSwapchainTimingPropertiesEXT(device, swapchain, &swapchainTimingProperties, &currentTimingPropertiesCounter);
         }
 
         for (i = 0; i < timingCount; ++i) {
@@ -400,8 +400,7 @@ To maintain a constant IPD, applications should use timing information collected
             }
         }
 
-        // Process past presentation timings:
-        // - Determine whether changing the IPD is necessary / desired.
+        // Process past presentation timings to determine whether changing the IPD is necessary / desired.
         uint64_t targetIPD = ProcessPastPresentationTimings(&swapchainTimingProperties);
 
         // Based on previous reported times and target IPD, compute the next target present time.
@@ -416,7 +415,7 @@ To maintain a constant IPD, applications should use timing information collected
         // Render to acquired swapchain image
         // (...)
 
-        VkPresentTimeTargetInfoEXT targetPresentTime = {
+        VkPresentTimingInfoEXT targetPresentTime = {
             .sType = VK_STRUCTURE_TYPE_PRESENT_TIME_TARGET_INFO_EXT,
             .pNext = NULL,
             .time = targetPresentTime,
@@ -426,7 +425,7 @@ To maintain a constant IPD, applications should use timing information collected
             .presentAtNearestRefreshCycle = VK_TRUE
         };
 
-        VkPresentTimesInfoEXT presentTimesInfo = {
+        VkPresentTimingsInfoEXT presentTimesInfo = {
             .sType = VK_STRUCTURE_TYPE_PRESENT_TIMES_INFO_EXT,
             .pNext = NULL,
             .swapchainCount = 1,
@@ -476,7 +475,7 @@ The major API changes from `VK_GOOGLE_display_timing` are:
 * Expose features in physical device and surface features
 * Variable refresh rate indicator
 * Progressive timings feedback
-* Allow time domain selection, with new domains dedicated to swapchains
+* Allow time domain selection, with new opaque domains dedicated to swapchains
 * Allow for relative present times
 
 Compared to `VK_GOOGLE_display_timing`, stricter specification language is also used to allow for more consistent and wider adoption among implementors.

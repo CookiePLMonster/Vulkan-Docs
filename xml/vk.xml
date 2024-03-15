@@ -13158,14 +13158,13 @@ typedef void* <name>MTLSharedEvent_id</name>;
             <param><type>uint32_t</type> <name>set</name></param>
             <param noautovalidity="true">const <type>void</type>* <name>pData</name></param>
         </command>
-        <command successcodes="VK_SUCCESS,VK_INCOMPLETE,VK_TIMEOUT" errorcodes="VK_ERROR_DEVICE_LOST,VK_ERROR_OUT_OF_DATE_KHR,VK_ERROR_SURFACE_LOST_KHR">
+        <command successcodes="VK_SUCCESS,VK_INCOMPLETE" errorcodes="VK_ERROR_DEVICE_LOST,VK_ERROR_OUT_OF_DATE_KHR,VK_ERROR_SURFACE_LOST_KHR">
             <proto><type>VkResult</type> <name>vkGetPastPresentationTimingEXT</name></proto>
             <param><type>VkDevice</type> <name>device</name></param>
             <param externsync="true"><type>VkSwapchainKHR</type> <name>swapchain</name></param>
-            <param><type>uint64_t</type> <name>timeout</name></param>
             <param optional="false,true"><type>uint32_t</type>* <name>pPresentationTimingCount</name></param>
             <param optional="true" len="pPresentationTimingCount"><type>VkPastPresentationTimingEXT</type>* <name>pPresentationTimings</name></param>
-            <param optional="true"><type>VkBool32</type>* <name>pTimingPropertiesChanged</name></param>
+            <param optional="true"><type>uint64_t</type>* <name>pSwapchainTimingPropertiesCounter</name></param>
         </command>
         <command>
             <proto><type>void</type> <name>vkSetHdrMetadataEXT</name></proto>
@@ -15322,6 +15321,7 @@ typedef void* <name>MTLSharedEvent_id</name>;
             <param><type>VkDevice</type> <name>device</name></param>
             <param externsync="true"><type>VkSwapchainKHR</type> <name>swapchain</name></param>
             <param><type>VkSwapchainTimingPropertiesEXT</type>* <name>pSwapchainTimingProperties</name></param>
+            <param optional="true"><type>uint64_t</type>* <name>pSwapchainTimingPropertiesCounter</name></param>
         </command>
         <command successcodes="VK_SUCCESS,VK_INCOMPLETE" errorcodes="VK_ERROR_OUT_OF_HOST_MEMORY,VK_ERROR_OUT_OF_DEVICE_MEMORY,VK_ERROR_SURFACE_LOST_KHR">
             <proto><type>VkResult</type> <name>vkGetSwapchainTimeDomainsEXT</name></proto>
