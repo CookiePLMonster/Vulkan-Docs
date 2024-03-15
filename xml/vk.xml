@@ -10847,7 +10847,7 @@ typedef void* <name>MTLSharedEvent_id</name>;
         <enum bitpos="0"    name="VK_PHYSICAL_DEVICE_SCHEDULING_CONTROLS_SHADER_CORE_COUNT_ARM"/>
     </enums>
     <enums name="VkPresentStageFlagBitsEXT" type="bitmask">
-        <enum bitpos="0"    name="VK_PRESENT_STAGE_IMAGE_HANDOFF_BIT_EXT"/>
+        <enum bitpos="0"    name="VK_PRESENT_STAGE_QUEUE_OPERATIONS_END_BIT_EXT"/>
         <enum bitpos="1"    name="VK_PRESENT_STAGE_IMAGE_LATCHED_BIT_EXT"/>
         <enum bitpos="2"    name="VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_OUT_BIT_EXT"/>
         <enum bitpos="3"    name="VK_PRESENT_STAGE_IMAGE_FIRST_PIXEL_VISIBLE_BIT_EXT"/>

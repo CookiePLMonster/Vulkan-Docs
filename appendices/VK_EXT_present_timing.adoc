@@ -124,8 +124,8 @@ artifacts.
 3) How to deal with changes in timing properties?
 
 *RESOLVED*: The slink:VkPastPresentationTimingEXT structure that is
-returned by flink:vkGetPastPresentationTimingEXT will contain
-pname:timeDomainChanged, which will be ename:VK_TRUE if the time
+returned by flink:vkGetPastPresentationTimingEXT contains
+pname:timeDomainChanged, which is ename:VK_TRUE if the time
 domain enabled for the swapchain is not currently available.
 
 An example of why display timing properties can change is if a surface
@@ -248,5 +248,4 @@ Split it out into its own extension and define the interaction here.
 
   * Revision 5, 2024-02-10 (Lionel Duc)
   ** Move swapchain state into per-present struct, removing the need for vkSetSwapchainTimingEXT
-  ** Add synchronous behavior to vkGetPastPresentationTimingEXT
   ** Add stage-local time domain
